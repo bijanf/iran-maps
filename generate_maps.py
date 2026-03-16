@@ -41,7 +41,7 @@ TEXT_COLOR = "#1A1A1A"
 MUTED_TEXT = "#666666"
 FIG_SIZE = (10.8, 13.5)
 DPI = 100
-TOTAL_SLIDES = 10
+TOTAL_SLIDES = 9
 
 TITLE_FONT = {
     "fontsize": 44,
@@ -270,7 +270,7 @@ def add_colorbar(fig, ax, im, label):
     """Add an inset colorbar with dark background."""
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     cax = inset_axes(ax, width="2.5%", height="35%", loc="right",
-                     borderpad=1.5)
+                     borderpad=3.0)
     cax.set_facecolor("#F5F5F5")
     cbar = fig.colorbar(im, cax=cax)
     cbar.set_label(label, color=TEXT_COLOR, fontsize=12)
@@ -323,7 +323,7 @@ def save_map(fig, filename):
 
 # ── Slide 1: HOOK ─────────────────────────────────────────
 def slide_hook():
-    print("[01/10] Hook Slide")
+    print("[01/09] Hook Slide")
     fig, ax = create_text_fig()
 
     boundary = load_boundary()
@@ -357,7 +357,7 @@ def slide_hook():
         fontfamily="sans-serif", ha="center", va="center",
     )
     fig.text(
-        0.5, 0.83, "IN 8 MAPS",
+        0.5, 0.83, "IN 7 MAPS",
         fontsize=36, color=ACCENT_COLOR, fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
     )
@@ -375,38 +375,9 @@ def slide_hook():
     save_map(fig, "01_hook.png")
 
 
-# ── Slide 2: Political Boundary ───────────────────────────
-def map_political():
-    print("[02/10] Political Boundary Map")
-    fig, ax = create_fig()
-
-    boundary = load_boundary()
-
-    add_water_background(ax)
-    add_land_context(ax)
-
-    boundary.plot(
-        ax=ax,
-        facecolor=LAND_COLOR,
-        edgecolor=BORDER_COLOR,
-        linewidth=BORDER_WIDTH,
-        zorder=5,
-    )
-
-    set_map_extent(ax, boundary)
-    add_title(ax, "IRAN")
-    add_sea_labels(ax)
-    add_source(ax, "GADM v4.1")
-
-    add_micro_hook(fig, "How big is Iran really? →")
-    add_slide_number(fig, 2)
-
-    save_map(fig, "02_political.png")
-
-
-# ── Slide 3: Size Comparison with Germany ──────────────────
+# ── Slide 2: Size Comparison with Germany ──────────────────
 def map_size_comparison():
-    print("[03/10] Size Comparison: Iran vs Germany")
+    print("[02/09] Size Comparison: Iran vs Germany")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -436,16 +407,16 @@ def map_size_comparison():
     germany_shifted["geometry"] = germany_shifted.geometry.translate(xoff=dx, yoff=dy)
 
     germany_shifted.plot(
-        ax=ax, facecolor="#F5D6A8", edgecolor="#CC8844",
-        linewidth=1.5, alpha=0.9, zorder=7,
+        ax=ax, facecolor="#555555", edgecolor="#333333",
+        linewidth=1.5, alpha=0.85, zorder=7,
     )
 
     deu_center = germany_shifted.union_all().centroid
     ax.text(
         deu_center.x, deu_center.y, "Germany",
-        fontsize=16, color="#CC8844", fontweight="bold",
+        fontsize=22, color="#FFFFFF", fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
-        path_effects=TEXT_OUTLINE,
+        path_effects=[pe.withStroke(linewidth=3, foreground="#333333")],
         zorder=8,
     )
 
@@ -467,14 +438,14 @@ def map_size_comparison():
     add_source(ax, "GADM v4.1")
 
     add_micro_hook(fig, "Now see the terrain →")
-    add_slide_number(fig, 3)
+    add_slide_number(fig, 2)
 
-    save_map(fig, "03_size_comparison.png")
+    save_map(fig, "02_size_comparison.png")
 
 
 # ── Slide 4: Topography ───────────────────────────────────
 def map_topography():
-    print("[04/10] Topography Map")
+    print("[03/09] Topography Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -514,18 +485,18 @@ def map_topography():
     add_source(ax, "NASA SRTM 90m / CGIAR-CSI")
 
     add_micro_hook(fig, "How high is Iran really? →")
-    add_slide_number(fig, 4)
+    add_slide_number(fig, 3)
 
-    save_map(fig, "04_topography.png")
+    save_map(fig, "03_topography.png")
 
 
 # ── Slide 5: Elevation Comparison ────────────────────────
 def slide_elevation_comparison():
-    print("[05/10] Elevation Comparison Slide")
+    print("[04/09] Elevation Comparison Slide")
     fig, ax = create_text_fig()
     from matplotlib.patches import Rectangle
 
-    add_slide_number(fig, 5)
+    add_slide_number(fig, 4)
 
     # Title
     fig.text(
@@ -573,11 +544,11 @@ def slide_elevation_comparison():
         # Germany bar (amber)
         w2 = bar_max_w * (val2 / max_val)
         rect2 = Rectangle((bar_left, y_base - 0.04), w2, bar_h,
-                           facecolor="#CC8844", alpha=0.9, transform=ax.transAxes)
+                           facecolor="#777777", alpha=0.9, transform=ax.transAxes)
         ax.add_patch(rect2)
         fig.text(
             bar_left + w2 + 0.02, y_base - 0.04 + bar_h / 2,
-            f"{val2:,} m", fontsize=20, color="#CC8844", fontweight="bold",
+            f"{val2:,} m", fontsize=20, color="#555555", fontweight="bold",
             fontfamily="sans-serif", va="center",
         )
         fig.text(
@@ -602,12 +573,12 @@ def slide_elevation_comparison():
 
     add_micro_hook(fig, "What covers this high plateau? →")
 
-    save_map(fig, "05_elevation.png")
+    save_map(fig, "04_elevation.png")
 
 
 # ── Slide 6: Vegetation / Land Cover ─────────────────────
 def map_vegetation():
-    print("[06/10] Land Cover Map")
+    print("[05/09] Land Cover Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -659,23 +630,23 @@ def map_vegetation():
     from matplotlib.patches import Patch
     patches = [Patch(facecolor=veg_colors[k], edgecolor="#555555", label=v) for k, v in legend_labels.items()]
     leg = ax.legend(
-        handles=patches, loc="lower left", fontsize=11,
+        handles=patches, loc="lower left", fontsize=18,
         facecolor="#FFFFFF", edgecolor="#CCCCCC", labelcolor=TEXT_COLOR,
-        framealpha=0.95,
+        framealpha=0.95, handlelength=1.5, handleheight=1.5,
     )
     leg.get_frame().set_linewidth(0.5)
 
     add_source(ax, "Copernicus CGLS-LC100 v3 (Buchhorn et al. 2020)", right=True)
 
     add_micro_hook(fig, "How warm is Iran? →")
-    add_slide_number(fig, 6)
+    add_slide_number(fig, 5)
 
-    save_map(fig, "06_landcover.png")
+    save_map(fig, "05_landcover.png")
 
 
 # ── Slide 9: Population Density ───────────────────────────
 def map_population():
-    print("[09/10] Population Density Map")
+    print("[08/09] Population Density Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -712,14 +683,14 @@ def map_population():
     add_source(ax, "WorldPop 2020 1km")
 
     add_micro_hook(fig, "Save & share →")
-    add_slide_number(fig, 9)
+    add_slide_number(fig, 8)
 
-    save_map(fig, "09_population.png")
+    save_map(fig, "08_population.png")
 
 
 # ── Slide 7: Temperature ─────────────────────────────────
 def map_temperature():
-    print("[07/10] Temperature Map")
+    print("[06/09] Temperature Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -759,14 +730,14 @@ def map_temperature():
     add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "How much rain falls here? →")
-    add_slide_number(fig, 7)
+    add_slide_number(fig, 6)
 
-    save_map(fig, "07_temperature.png")
+    save_map(fig, "06_temperature.png")
 
 
 # ── Slide 8: Precipitation ──────────────────────────────
 def map_precipitation():
-    print("[08/10] Precipitation Map")
+    print("[07/09] Precipitation Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -804,14 +775,14 @@ def map_precipitation():
     add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "Where do 88 million people live? →")
-    add_slide_number(fig, 8)
+    add_slide_number(fig, 7)
 
-    save_map(fig, "08_precipitation.png")
+    save_map(fig, "07_precipitation.png")
 
 
 # ── Slide 10: CTA ─────────────────────────────────────────
 def slide_cta():
-    print("[10/10] CTA Slide")
+    print("[09/09] CTA Slide")
     fig, ax = create_text_fig()
 
     fig.text(
@@ -839,23 +810,22 @@ def slide_cta():
         fontfamily="sans-serif", ha="center", va="center",
     )
 
-    add_slide_number(fig, 10)
+    add_slide_number(fig, 9)
 
-    save_map(fig, "10_cta.png")
+    save_map(fig, "09_cta.png")
 
 
 # ── Main ──────────────────────────────────────────────────
 MAP_FUNCS = {
     1: slide_hook,
-    2: map_political,
-    3: map_size_comparison,
-    4: map_topography,
-    5: slide_elevation_comparison,
-    6: map_vegetation,
-    7: map_temperature,
-    8: map_precipitation,
-    9: map_population,
-    10: slide_cta,
+    2: map_size_comparison,
+    3: map_topography,
+    4: slide_elevation_comparison,
+    5: map_vegetation,
+    6: map_temperature,
+    7: map_precipitation,
+    8: map_population,
+    9: slide_cta,
 }
 
 
