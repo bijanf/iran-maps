@@ -1,5 +1,5 @@
 """
-Generate 10 maps of Iran for an Instagram carousel — Dark Bauhaus style.
+Generate 10 maps of Iran for an Instagram carousel — clean white theme.
 Output: 1080x1350px PNGs optimized for Instagram engagement.
 
 Usage:
@@ -29,16 +29,16 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Dark Bauhaus palette
-BG_COLOR = "#121212"
-LAND_COLOR = "#2A2A2A"
-WATER_COLOR = "#0A1628"
-NEIGHBOR_LAND_COLOR = "#FFFFFF"
-BORDER_COLOR = "#00FFCC"
-BORDER_WIDTH = 2.0
-ACCENT_COLOR = "#00FFCC"
-TEXT_COLOR = "#F0F0F0"
-MUTED_TEXT = "#888888"
+# Clean white palette
+BG_COLOR = "#FFFFFF"
+LAND_COLOR = "#E8E8E8"
+WATER_COLOR = "#D6EAF8"
+NEIGHBOR_LAND_COLOR = "#F0F0F0"
+BORDER_COLOR = "#333333"
+BORDER_WIDTH = 1.5
+ACCENT_COLOR = "#C0392B"
+TEXT_COLOR = "#1A1A1A"
+MUTED_TEXT = "#666666"
 FIG_SIZE = (10.8, 13.5)
 DPI = 100
 TOTAL_SLIDES = 10
@@ -51,7 +51,7 @@ TITLE_FONT = {
 }
 
 # Text outline for readability over imagery
-TEXT_OUTLINE = [pe.withStroke(linewidth=3, foreground="#000000")]
+TEXT_OUTLINE = [pe.withStroke(linewidth=3, foreground="#FFFFFF")]
 
 # Water body label positions (lon, lat)
 SEA_LABELS = [
@@ -243,7 +243,7 @@ def add_sea_labels(ax):
     for lon, lat, name in SEA_LABELS:
         ax.text(
             lon, lat, name,
-            fontsize=16, color="#4A7A9B", fontstyle="italic",
+            fontsize=16, color="#2874A6", fontstyle="italic",
             fontfamily="sans-serif", ha="center", va="center",
             path_effects=TEXT_OUTLINE,
             zorder=10,
@@ -271,7 +271,7 @@ def add_colorbar(fig, ax, im, label):
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     cax = inset_axes(ax, width="2.5%", height="35%", loc="right",
                      borderpad=1.5)
-    cax.set_facecolor("#1A1A1A")
+    cax.set_facecolor("#F5F5F5")
     cbar = fig.colorbar(im, cax=cax)
     cbar.set_label(label, color=TEXT_COLOR, fontsize=12)
     cbar.ax.yaxis.label.set_path_effects(TEXT_OUTLINE)
@@ -279,7 +279,7 @@ def add_colorbar(fig, ax, im, label):
     plt.setp(cbar.ax.yaxis.get_ticklabels(), color=TEXT_COLOR, fontsize=10)
     for lbl in cbar.ax.yaxis.get_ticklabels():
         lbl.set_path_effects(TEXT_OUTLINE)
-    cbar.outline.set_edgecolor("#333333")
+    cbar.outline.set_edgecolor("#CCCCCC")
     return cbar
 
 
@@ -306,7 +306,7 @@ def add_slide_number(fig, n):
             fig.text(x, dot_y, "●", fontsize=12, color=ACCENT_COLOR,
                      ha="center", va="center", fontfamily="sans-serif")
         else:
-            fig.text(x, dot_y, "●", fontsize=10, color="#444444",
+            fig.text(x, dot_y, "●", fontsize=10, color="#CCCCCC",
                      ha="center", va="center", fontfamily="sans-serif")
 
 
@@ -436,7 +436,7 @@ def map_size_comparison():
     germany_shifted["geometry"] = germany_shifted.geometry.translate(xoff=dx, yoff=dy)
 
     germany_shifted.plot(
-        ax=ax, facecolor="#3A2A1A", edgecolor="#CC8844",
+        ax=ax, facecolor="#F5D6A8", edgecolor="#CC8844",
         linewidth=1.5, alpha=0.9, zorder=7,
     )
 
@@ -557,11 +557,11 @@ def slide_elevation_comparison():
         # Iran bar (cyan)
         w1 = bar_max_w * (val1 / max_val)
         rect1 = Rectangle((bar_left, y_base + 0.02), w1, bar_h,
-                           facecolor=ACCENT_COLOR, alpha=0.9, transform=ax.transAxes)
+                           facecolor="#2874A6", alpha=0.9, transform=ax.transAxes)
         ax.add_patch(rect1)
         fig.text(
             bar_left + w1 + 0.02, y_base + 0.02 + bar_h / 2,
-            f"{val1:,} m", fontsize=20, color=ACCENT_COLOR, fontweight="bold",
+            f"{val1:,} m", fontsize=20, color="#2874A6", fontweight="bold",
             fontfamily="sans-serif", va="center",
         )
         fig.text(
@@ -589,7 +589,7 @@ def slide_elevation_comparison():
     # Bold callout
     fig.text(
         0.5, 0.15, "Iran is 5× higher on average",
-        fontsize=28, color=ACCENT_COLOR, fontweight="bold",
+        fontsize=28, color="#2874A6", fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
     )
 
@@ -660,7 +660,7 @@ def map_vegetation():
     patches = [Patch(facecolor=veg_colors[k], edgecolor="#555555", label=v) for k, v in legend_labels.items()]
     leg = ax.legend(
         handles=patches, loc="lower left", fontsize=11,
-        facecolor="#1A1A1A", edgecolor="#333333", labelcolor=TEXT_COLOR,
+        facecolor="#FFFFFF", edgecolor="#CCCCCC", labelcolor=TEXT_COLOR,
         framealpha=0.95,
     )
     leg.get_frame().set_linewidth(0.5)
@@ -731,11 +731,11 @@ def map_temperature():
     add_water_background(ax)
     add_land_context(ax)
 
-    temp_cmap = LinearSegmentedColormap.from_list(
-        "temp_diverging",
-        ["#2166AC", "#67A9CF", "#D1E5F0", "#FDDBC7", "#EF8A62", "#B2182B"],
-        N=256,
-    )
+    # Discrete temperature classes
+    temp_bounds = [-5, 0, 5, 10, 15, 20, 25, 30]
+    temp_colors = ["#2166AC", "#67A9CF", "#D1E5F0", "#FDDBC7", "#EF8A62", "#B2182B", "#67001F"]
+    temp_cmap = mcolors.ListedColormap(temp_colors)
+    temp_norm = mcolors.BoundaryNorm(temp_bounds, temp_cmap.N)
 
     extent = [
         transform[2],
@@ -744,10 +744,8 @@ def map_temperature():
         transform[5],
     ]
     im = ax.imshow(
-        data, cmap=temp_cmap, extent=extent,
-        vmin=np.nanpercentile(data, 2),
-        vmax=np.nanpercentile(data, 98),
-        zorder=5,
+        data, cmap=temp_cmap, norm=temp_norm, extent=extent,
+        interpolation="nearest", zorder=5,
     )
 
     boundary.plot(ax=ax, facecolor="none", edgecolor=BORDER_COLOR, linewidth=BORDER_WIDTH, alpha=0.6, zorder=6)
@@ -778,11 +776,11 @@ def map_precipitation():
     add_water_background(ax)
     add_land_context(ax)
 
-    precip_cmap = LinearSegmentedColormap.from_list(
-        "precip_arid",
-        ["#8C510A", "#BF812D", "#DFC27D", "#C7EAE5", "#80CDC1", "#35978F", "#01665E"],
-        N=256,
-    )
+    # Discrete precipitation classes (mm/year)
+    precip_bounds = [0, 50, 100, 200, 300, 500, 750, 1000, 1500]
+    precip_colors = ["#8C510A", "#BF812D", "#DFC27D", "#F6E8C3", "#C7EAE5", "#80CDC1", "#35978F", "#01665E"]
+    precip_cmap = mcolors.ListedColormap(precip_colors)
+    precip_norm = mcolors.BoundaryNorm(precip_bounds, precip_cmap.N)
 
     extent = [
         transform[2],
@@ -791,10 +789,8 @@ def map_precipitation():
         transform[5],
     ]
     im = ax.imshow(
-        data, cmap=precip_cmap, extent=extent,
-        vmin=np.nanpercentile(data, 2),
-        vmax=np.nanpercentile(data, 98),
-        zorder=5,
+        data, cmap=precip_cmap, norm=precip_norm, extent=extent,
+        interpolation="nearest", zorder=5,
     )
 
     boundary.plot(ax=ax, facecolor="none", edgecolor=BORDER_COLOR, linewidth=BORDER_WIDTH, alpha=0.6, zorder=6)
@@ -838,7 +834,7 @@ def slide_cta():
     ax.plot([0.3, 0.7], [0.38, 0.38], color=ACCENT_COLOR, linewidth=2, alpha=0.6)
 
     fig.text(
-        0.5, 0.32, "@bijanf",
+        0.5, 0.32, "@bijanfallah_",
         fontsize=22, color=ACCENT_COLOR,
         fontfamily="sans-serif", ha="center", va="center",
     )
@@ -871,7 +867,7 @@ def main():
             selected = int(sys.argv[idx])
 
     print("=" * 50)
-    print("Iran Maps Generator — Dark Bauhaus Style")
+    print("Iran Maps Generator")
     print("=" * 50)
 
     maps_to_run = [selected] if selected else sorted(MAP_FUNCS.keys())
