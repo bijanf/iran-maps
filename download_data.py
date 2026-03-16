@@ -6,14 +6,14 @@ Downloads:
 2. SRTM 90m DEM topography (CGIAR tiles, merged)
 3. Copernicus CGLS-LC100 vegetation / land cover (from Zenodo)
 4. WorldPop population density
-5. W5E5 climate data — temperature & precipitation (IPCC Atlas)
+5. CHELSA v2.1 climate data — temperature & precipitation
 
 Data sources & licenses:
 - GADM: https://gadm.org/ (free for academic/non-commercial use)
 - SRTM: NASA / CGIAR-CSI (public domain)
 - Copernicus CGLS-LC100: Buchhorn et al. 2020, Zenodo (CC-BY 4.0)
 - WorldPop: https://www.worldpop.org/ (CC-BY 4.0)
-- W5E5: ISIMIP / IPCC WGI Interactive Atlas (ERA5 adjusted)
+- CHELSA: Karger et al. 2017, https://chelsa-climate.org/ (CC-BY 4.0)
 """
 
 import os
@@ -294,27 +294,26 @@ def download_worldpop():
     download_file(url, dest, "WorldPop Iran population density 2020")
 
 
-# ── 5. W5E5 Climate Data ─────────────────────────────────────
+# ── 5. CHELSA Climate Data ────────────────────────────────────
 
 def download_climate():
-    """Process W5E5 (ERA5 adjusted) climate data from IPCC Atlas and clip to Iran.
+    """Download CHELSA v2.1 monthly climatologies and compute annual aggregates.
 
-    Source: W5E5 v2.0 — ISIMIP (ERA5 bias-adjusted reanalysis, 1980–2015)
-    Resolution: 0.5° global grid
-    Variables: tas (annual mean temperature, °C), pr (total precipitation, mm/day → mm/yr)
+    Source: CHELSA v2.1 — Karger et al. 2017
+    Resolution: 30 arc-seconds (~1 km)
+    Variables: tas (monthly mean temperature, °C × 10), pr (monthly precipitation, kg/m²)
 
-    The user must manually download the data from the IPCC WGI Interactive Atlas:
-      https://interactive-atlas.ipcc.ch/
-    and place the zip files in the data/ directory.
+    Downloads 12 monthly files per variable. Each global file (~1–3 GB) is
+    clipped to Iran immediately after download to conserve disk space, then
+    monthly clips are averaged (tas) or summed (pr) into annual rasters.
     """
-    import xarray as xr
     import rasterio
-    from rasterio.transform import from_bounds
     from rasterio.mask import mask as rio_mask
+    from rasterio.windows import from_bounds as window_from_bounds
     import geopandas as gpd
     from shapely.geometry import mapping
 
-    print("\n[5/5] W5E5 Climate Data (Temperature & Precipitation)")
+    print("\n[5/5] CHELSA v2.1 Climate Data (Temperature & Precipitation)")
 
     temp_dest = os.path.join(DATA_DIR, "iran_temperature.tif")
     precip_dest = os.path.join(DATA_DIR, "iran_precipitation.tif")
@@ -326,99 +325,86 @@ def download_climate():
 
     boundary_path = os.path.join(DATA_DIR, "iran_boundary.shp")
     if not os.path.exists(boundary_path):
-        print("  ERROR: Boundary shapefile needed for clipping. Run GADM download first.")
-        return
-
-    # Find W5E5 zip files in data directory
-    tas_zip = None
-    pr_zip = None
-    for f in os.listdir(DATA_DIR):
-        fl = f.lower()
-        if "w5e5" in fl and "temperature" in fl and f.endswith(".zip"):
-            tas_zip = os.path.join(DATA_DIR, f)
-        elif "w5e5" in fl and "precipitation" in fl and f.endswith(".zip"):
-            pr_zip = os.path.join(DATA_DIR, f)
-
-    if not tas_zip or not pr_zip:
-        print("  ERROR: W5E5 climate zip files not found in data/.")
-        print("  Download from https://interactive-atlas.ipcc.ch/ and place in data/:")
-        print("    - W5E5 Mean temperature .zip")
-        print("    - W5E5 Total precipitation .zip")
+        print("  ERROR: Boundary shapefile needed. Run GADM download first.")
         return
 
     boundary = gpd.read_file(boundary_path)
 
-    # Process each variable
-    jobs = [
-        (tas_zip, "tas", temp_dest, "temperature", 1.0),
-        (pr_zip, "pr", precip_dest, "precipitation", 365.25),
+    chelsa_dir = os.path.join(DATA_DIR, "chelsa")
+    os.makedirs(chelsa_dir, exist_ok=True)
+
+    base_url = "https://os.unil.cloud.switch.ch/chelsa02/chelsa/global/climatologies"
+    variables = [
+        # (var, dest, url_template, unit_scale, agg_method)
+        ("tas", temp_dest, f"{base_url}/tas/1981-2010/CHELSA_tas_{{m:02d}}_1981-2010_V.2.1.tif",
+         0.1, "mean"),   # CHELSA tas = °C × 10 → divide by 10
+        ("pr", precip_dest, f"{base_url}/pr/1981-2010/CHELSA_pr_{{m:02d}}_1981-2010_V.2.1.tif",
+         1.0, "sum"),    # CHELSA pr = kg/m²/month (= mm/month) → sum for annual
     ]
 
-    for zip_path, var_name, dest_path, label, scale_factor in jobs:
+    for var_name, dest_path, url_template, scale, agg in variables:
         if os.path.exists(dest_path):
             print(f"  Already exists: {dest_path}")
             continue
 
-        print(f"  Processing {label}...")
-        extract_dir = os.path.join(DATA_DIR, f"_tmp_{var_name}")
-        os.makedirs(extract_dir, exist_ok=True)
+        print(f"  Processing {var_name} (12 monthly files)...")
+        monthly_clips = []
+        clip_profile = None
 
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(extract_dir)
+        for month in range(1, 13):
+            url = url_template.format(m=month)
+            filename = os.path.basename(url)
+            global_path = os.path.join(chelsa_dir, filename)
 
-        nc_path = os.path.join(extract_dir, "map.nc")
-        if not os.path.exists(nc_path):
-            print(f"  ERROR: map.nc not found in {zip_path}")
-            shutil.rmtree(extract_dir)
+            # Download if not cached
+            if not os.path.exists(global_path):
+                if not download_file(url, global_path, f"CHELSA {var_name} month {month:02d}"):
+                    print(f"  ERROR: Failed to download month {month}. Aborting {var_name}.")
+                    break
+
+            # Clip to Iran boundary
+            print(f"    Clipping month {month:02d}...")
+            with rasterio.open(global_path) as src:
+                boundary_proj = boundary.to_crs(src.crs)
+                geoms = [mapping(g) for g in boundary_proj.geometry]
+                clipped, clipped_t = rio_mask(src, geoms, crop=True, nodata=np.nan)
+                if clip_profile is None:
+                    clip_profile = src.profile.copy()
+                    clip_profile.update(
+                        height=clipped.shape[1], width=clipped.shape[2],
+                        transform=clipped_t, dtype="float32",
+                        nodata=np.nan, compress="deflate",
+                    )
+
+            monthly_clips.append(clipped[0].astype(np.float32) * scale)
+
+            # Remove global file to save disk
+            os.remove(global_path)
+
+        if len(monthly_clips) != 12:
+            print(f"  ERROR: Only got {len(monthly_clips)}/12 months for {var_name}.")
             continue
 
-        ds = xr.open_dataset(nc_path)
-        # Find the data variable (skip 'crs')
-        data_var = var_name if var_name in ds else [v for v in ds.data_vars if v != "crs"][0]
-        data = ds[data_var].values * scale_factor
-        lat = ds["lat"].values
-        lon = ds["lon"].values
+        # Aggregate: mean for temperature, sum for precipitation
+        stack = np.stack(monthly_clips, axis=0)
+        if agg == "mean":
+            annual = np.nanmean(stack, axis=0)
+        else:
+            annual = np.nansum(stack, axis=0)
+            # Restore NaN where all months were NaN
+            all_nan = np.all(np.isnan(stack), axis=0)
+            annual[all_nan] = np.nan
 
-        # Rasters expect top-to-bottom latitude
-        if lat[0] < lat[-1]:
-            data = np.flipud(data)
-            lat = lat[::-1]
+        with rasterio.open(dest_path, "w", **clip_profile) as dst:
+            dst.write(annual[np.newaxis, :, :])
 
-        transform = from_bounds(
-            lon.min() - 0.25, lat.min() - 0.25,
-            lon.max() + 0.25, lat.max() + 0.25,
-            len(lon), len(lat),
-        )
-        profile = {
-            "driver": "GTiff", "dtype": "float32",
-            "width": len(lon), "height": len(lat),
-            "count": 1, "crs": "EPSG:4326",
-            "transform": transform, "nodata": np.nan,
-        }
-
-        # Write global, then clip to Iran
-        tmp_global = os.path.join(DATA_DIR, f"_tmp_global_{var_name}.tif")
-        with rasterio.open(tmp_global, "w", **profile) as dst:
-            dst.write(data.astype(np.float32), 1)
-
-        with rasterio.open(tmp_global) as src:
-            geoms = [mapping(g) for g in boundary.to_crs(src.crs).geometry]
-            clipped, clipped_t = rio_mask(src, geoms, crop=True, nodata=np.nan)
-            p = src.profile.copy()
-            p.update(
-                height=clipped.shape[1], width=clipped.shape[2],
-                transform=clipped_t, compress="deflate",
-            )
-        with rasterio.open(dest_path, "w", **p) as dst:
-            dst.write(clipped)
-
-        # Clean up
-        ds.close()
-        os.remove(tmp_global)
-        shutil.rmtree(extract_dir)
         print(f"  Saved: {dest_path}")
 
-    print("  Source: W5E5 v2.0 / ISIMIP (ERA5 adjusted, 1980–2015)")
+    # Clean up empty chelsa dir
+    if os.path.exists(chelsa_dir) and not os.listdir(chelsa_dir):
+        os.rmdir(chelsa_dir)
+
+    print("  Source: CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
 
 # ── Main ──────────────────────────────────────────────────────

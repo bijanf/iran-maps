@@ -726,7 +726,7 @@ def map_temperature():
     tif_path = os.path.join(DATA_DIR, "iran_temperature.tif")
     data, transform = load_and_mask_raster(tif_path, boundary)
 
-    # W5E5 data is already in °C
+    # CHELSA: download_data.py already converts °C×10 → °C
 
     add_water_background(ax)
     add_land_context(ax)
@@ -756,7 +756,7 @@ def map_temperature():
 
     add_colorbar(fig, ax, im, "Annual Mean Temperature (°C)")
 
-    add_source(ax, "W5E5 / ISIMIP (ERA5 adjusted, 1980–2015)")
+    add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "How much rain falls here? →")
     add_slide_number(fig, 7)
@@ -801,7 +801,7 @@ def map_precipitation():
 
     add_colorbar(fig, ax, im, "Annual Precipitation (mm)")
 
-    add_source(ax, "W5E5 / ISIMIP (ERA5 adjusted, 1980–2015)")
+    add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "Where do 88 million people live? →")
     add_slide_number(fig, 8)
