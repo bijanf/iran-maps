@@ -546,7 +546,7 @@ def map_vegetation():
         handles=patches, loc="lower center", ncol=4, fontsize=14,
         facecolor="#FFFFFF", edgecolor="#CCCCCC", labelcolor=TEXT_COLOR,
         framealpha=0.95, handlelength=1.2, handleheight=1.2,
-        bbox_to_anchor=(0.5, -0.02),
+        bbox_to_anchor=(0.5, -0.12),
     )
     leg.get_frame().set_linewidth(0.5)
 
