@@ -33,7 +33,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 BG_COLOR = "#FFFFFF"
 LAND_COLOR = "#E8E8E8"
 WATER_COLOR = "#D6EAF8"
-NEIGHBOR_LAND_COLOR = "#F0F0F0"
+NEIGHBOR_LAND_COLOR = "#FFFFFF"
 BORDER_COLOR = "#333333"
 BORDER_WIDTH = 1.5
 ACCENT_COLOR = "#C0392B"
@@ -270,13 +270,13 @@ def add_colorbar(fig, ax, im, label):
     """Add an inset colorbar with dark background."""
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     cax = inset_axes(ax, width="2.5%", height="35%", loc="right",
-                     borderpad=3.0)
+                     borderpad=4.5)
     cax.set_facecolor("#F5F5F5")
     cbar = fig.colorbar(im, cax=cax)
-    cbar.set_label(label, color=TEXT_COLOR, fontsize=12)
+    cbar.set_label(label, color=TEXT_COLOR, fontsize=13, fontweight="bold")
     cbar.ax.yaxis.label.set_path_effects(TEXT_OUTLINE)
     cbar.ax.yaxis.set_tick_params(color=TEXT_COLOR)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=TEXT_COLOR, fontsize=10)
+    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=TEXT_COLOR, fontsize=12, fontweight="bold")
     for lbl in cbar.ax.yaxis.get_ticklabels():
         lbl.set_path_effects(TEXT_OUTLINE)
     cbar.outline.set_edgecolor("#CCCCCC")
@@ -343,7 +343,7 @@ def slide_hook():
     map_ax.set_axis_off()
 
     boundary.plot(
-        ax=map_ax, facecolor="none", edgecolor=ACCENT_COLOR,
+        ax=map_ax, facecolor="none", edgecolor="#1A1A1A",
         linewidth=3.0, zorder=5,
     )
     map_ax.set_xlim(bounds[0] - 1, bounds[2] + 1)
@@ -358,7 +358,7 @@ def slide_hook():
     )
     fig.text(
         0.5, 0.83, "IN 7 MAPS",
-        fontsize=36, color=ACCENT_COLOR, fontweight="bold",
+        fontsize=36, color="#1A1A1A", fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
     )
 
@@ -697,7 +697,8 @@ def map_temperature():
     tif_path = os.path.join(DATA_DIR, "iran_temperature.tif")
     data, transform = load_and_mask_raster(tif_path, boundary)
 
-    # CHELSA: download_data.py already converts °C×10 → °C
+    # CHELSA v2.1: stored as K×10, download_data.py scales by 0.1 → Kelvin
+    data = data - 273.15  # Convert Kelvin → °C
 
     add_water_background(ax)
     add_land_context(ax)
@@ -743,6 +744,9 @@ def map_precipitation():
     boundary = load_boundary()
     tif_path = os.path.join(DATA_DIR, "iran_precipitation.tif")
     data, transform = load_and_mask_raster(tif_path, boundary)
+
+    # CHELSA v2.1: pr stored as mm×10, summed over 12 months
+    data = data / 10.0
 
     add_water_background(ax)
     add_land_context(ax)
