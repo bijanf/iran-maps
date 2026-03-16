@@ -357,7 +357,7 @@ def slide_hook():
         fontfamily="sans-serif", ha="center", va="center",
     )
     fig.text(
-        0.5, 0.83, "IN 6 MAPS",
+        0.5, 0.79, "IN 6 MAPS",
         fontsize=36, color="#1A1A1A", fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
     )
