@@ -41,7 +41,7 @@ TEXT_COLOR = "#1A1A1A"
 MUTED_TEXT = "#666666"
 FIG_SIZE = (10.8, 13.5)
 DPI = 100
-TOTAL_SLIDES = 9
+TOTAL_SLIDES = 7
 
 TITLE_FONT = {
     "fontsize": 44,
@@ -323,7 +323,7 @@ def save_map(fig, filename):
 
 # ── Slide 1: HOOK ─────────────────────────────────────────
 def slide_hook():
-    print("[01/09] Hook Slide")
+    print("[01/07] Hook Slide")
     fig, ax = create_text_fig()
 
     boundary = load_boundary()
@@ -357,7 +357,7 @@ def slide_hook():
         fontfamily="sans-serif", ha="center", va="center",
     )
     fig.text(
-        0.5, 0.83, "IN 7 MAPS",
+        0.5, 0.83, "IN 6 MAPS",
         fontsize=36, color="#1A1A1A", fontweight="bold",
         fontfamily="sans-serif", ha="center", va="center",
     )
@@ -369,7 +369,6 @@ def slide_hook():
         fontfamily="sans-serif", ha="center", va="center",
     )
 
-    add_micro_hook(fig, "Swipe to explore →")
     add_slide_number(fig, 1)
 
     save_map(fig, "01_hook.png")
@@ -377,7 +376,7 @@ def slide_hook():
 
 # ── Slide 2: Size Comparison with Germany ──────────────────
 def map_size_comparison():
-    print("[02/09] Size Comparison: Iran vs Germany")
+    print("[02/07] Size Comparison: Iran vs Germany")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -445,7 +444,7 @@ def map_size_comparison():
 
 # ── Slide 4: Topography ───────────────────────────────────
 def map_topography():
-    print("[03/09] Topography Map")
+    print("[03/07] Topography Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -484,101 +483,15 @@ def map_topography():
 
     add_source(ax, "NASA SRTM 90m / CGIAR-CSI")
 
-    add_micro_hook(fig, "How high is Iran really? →")
+    add_micro_hook(fig, "What covers this land? →")
     add_slide_number(fig, 3)
 
     save_map(fig, "03_topography.png")
 
 
-# ── Slide 5: Elevation Comparison ────────────────────────
-def slide_elevation_comparison():
-    print("[04/09] Elevation Comparison Slide")
-    fig, ax = create_text_fig()
-    from matplotlib.patches import Rectangle
-
-    add_slide_number(fig, 4)
-
-    # Title
-    fig.text(
-        0.5, 0.88, "IRAN — Elevation",
-        fontsize=44, color=TEXT_COLOR, fontweight="bold",
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-
-    # Data
-    bars = [
-        ("Average Elevation", 1305, "Iran", 263, "Germany"),
-        ("Highest Peak", 5610, "Damavand", 2962, "Zugspitze"),
-    ]
-
-    y_positions = [0.62, 0.38]
-    max_val = 5610
-    bar_left = 0.18
-    bar_max_w = 0.65
-    bar_h = 0.045
-
-    for (group_label, val1, lbl1, val2, lbl2), y_base in zip(bars, y_positions):
-        # Group label
-        fig.text(
-            0.5, y_base + 0.10, group_label,
-            fontsize=26, color=MUTED_TEXT, fontweight="bold",
-            fontfamily="sans-serif", ha="center", va="center",
-        )
-
-        # Iran bar (cyan)
-        w1 = bar_max_w * (val1 / max_val)
-        rect1 = Rectangle((bar_left, y_base + 0.02), w1, bar_h,
-                           facecolor="#2874A6", alpha=0.9, transform=ax.transAxes)
-        ax.add_patch(rect1)
-        fig.text(
-            bar_left + w1 + 0.02, y_base + 0.02 + bar_h / 2,
-            f"{val1:,} m", fontsize=20, color="#2874A6", fontweight="bold",
-            fontfamily="sans-serif", va="center",
-        )
-        fig.text(
-            bar_left - 0.02, y_base + 0.02 + bar_h / 2,
-            lbl1, fontsize=20, color=TEXT_COLOR, fontweight="bold",
-            fontfamily="sans-serif", ha="right", va="center",
-        )
-
-        # Germany bar (amber)
-        w2 = bar_max_w * (val2 / max_val)
-        rect2 = Rectangle((bar_left, y_base - 0.04), w2, bar_h,
-                           facecolor="#777777", alpha=0.9, transform=ax.transAxes)
-        ax.add_patch(rect2)
-        fig.text(
-            bar_left + w2 + 0.02, y_base - 0.04 + bar_h / 2,
-            f"{val2:,} m", fontsize=20, color="#555555", fontweight="bold",
-            fontfamily="sans-serif", va="center",
-        )
-        fig.text(
-            bar_left - 0.02, y_base - 0.04 + bar_h / 2,
-            lbl2, fontsize=20, color=TEXT_COLOR, fontweight="bold",
-            fontfamily="sans-serif", ha="right", va="center",
-        )
-
-    # Bold callout
-    fig.text(
-        0.5, 0.15, "Iran is 5× higher on average",
-        fontsize=28, color="#2874A6", fontweight="bold",
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-
-    # Source
-    fig.text(
-        0.5, 0.08, "Source: NASA SRTM / BKG",
-        fontsize=14, color=MUTED_TEXT,
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-
-    add_micro_hook(fig, "What covers this high plateau? →")
-
-    save_map(fig, "04_elevation.png")
-
-
-# ── Slide 6: Vegetation / Land Cover ─────────────────────
+# ── Slide 4: Vegetation / Land Cover ─────────────────────
 def map_vegetation():
-    print("[05/09] Land Cover Map")
+    print("[04/07] Land Cover Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -624,29 +537,30 @@ def map_vegetation():
     add_sea_labels(ax)
 
     legend_labels = {
-        10: "Tree Cover", 20: "Shrubland", 30: "Grassland", 40: "Cropland",
-        50: "Built-up", 60: "Bare / Sparse", 70: "Snow / Ice", 80: "Water",
+        10: "Trees", 20: "Shrubs", 30: "Grass", 40: "Crops",
+        50: "Urban", 60: "Bare", 70: "Snow", 80: "Water",
     }
     from matplotlib.patches import Patch
-    patches = [Patch(facecolor=veg_colors[k], edgecolor="#555555", label=v) for k, v in legend_labels.items()]
+    patches = [Patch(facecolor=veg_colors[k], edgecolor="#999999", label=v) for k, v in legend_labels.items()]
     leg = ax.legend(
-        handles=patches, loc="lower left", fontsize=18,
+        handles=patches, loc="lower center", ncol=4, fontsize=14,
         facecolor="#FFFFFF", edgecolor="#CCCCCC", labelcolor=TEXT_COLOR,
-        framealpha=0.95, handlelength=1.5, handleheight=1.5,
+        framealpha=0.95, handlelength=1.2, handleheight=1.2,
+        bbox_to_anchor=(0.5, -0.02),
     )
     leg.get_frame().set_linewidth(0.5)
 
     add_source(ax, "Copernicus CGLS-LC100 v3 (Buchhorn et al. 2020)", right=True)
 
     add_micro_hook(fig, "How warm is Iran? →")
-    add_slide_number(fig, 5)
+    add_slide_number(fig, 4)
 
-    save_map(fig, "05_landcover.png")
+    save_map(fig, "04_landcover.png")
 
 
 # ── Slide 9: Population Density ───────────────────────────
 def map_population():
-    print("[08/09] Population Density Map")
+    print("[07/07] Population Density Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -682,15 +596,14 @@ def map_population():
 
     add_source(ax, "WorldPop 2020 1km")
 
-    add_micro_hook(fig, "Save & share →")
-    add_slide_number(fig, 8)
+    add_slide_number(fig, 7)
 
-    save_map(fig, "08_population.png")
+    save_map(fig, "07_population.png")
 
 
 # ── Slide 7: Temperature ─────────────────────────────────
 def map_temperature():
-    print("[06/09] Temperature Map")
+    print("[05/07] Temperature Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -731,14 +644,14 @@ def map_temperature():
     add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "How much rain falls here? →")
-    add_slide_number(fig, 6)
+    add_slide_number(fig, 5)
 
-    save_map(fig, "06_temperature.png")
+    save_map(fig, "05_temperature.png")
 
 
 # ── Slide 8: Precipitation ──────────────────────────────
 def map_precipitation():
-    print("[07/09] Precipitation Map")
+    print("[06/07] Precipitation Map")
     fig, ax = create_fig()
 
     boundary = load_boundary()
@@ -779,44 +692,9 @@ def map_precipitation():
     add_source(ax, "CHELSA v2.1 (Karger et al. 2017, 1981–2010)")
 
     add_micro_hook(fig, "Where do 88 million people live? →")
-    add_slide_number(fig, 7)
+    add_slide_number(fig, 6)
 
-    save_map(fig, "07_precipitation.png")
-
-
-# ── Slide 10: CTA ─────────────────────────────────────────
-def slide_cta():
-    print("[09/09] CTA Slide")
-    fig, ax = create_text_fig()
-
-    fig.text(
-        0.5, 0.62, "Save this post.",
-        fontsize=44, color=TEXT_COLOR, fontweight="bold",
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-    fig.text(
-        0.5, 0.52, "Share it with someone",
-        fontsize=32, color=MUTED_TEXT,
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-    fig.text(
-        0.5, 0.46, "who'd love to see this.",
-        fontsize=32, color=MUTED_TEXT,
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-
-    # Accent line
-    ax.plot([0.3, 0.7], [0.38, 0.38], color=ACCENT_COLOR, linewidth=2, alpha=0.6)
-
-    fig.text(
-        0.5, 0.32, "@bijanfallah_",
-        fontsize=22, color=ACCENT_COLOR,
-        fontfamily="sans-serif", ha="center", va="center",
-    )
-
-    add_slide_number(fig, 9)
-
-    save_map(fig, "09_cta.png")
+    save_map(fig, "06_precipitation.png")
 
 
 # ── Main ──────────────────────────────────────────────────
@@ -824,12 +702,10 @@ MAP_FUNCS = {
     1: slide_hook,
     2: map_size_comparison,
     3: map_topography,
-    4: slide_elevation_comparison,
-    5: map_vegetation,
-    6: map_temperature,
-    7: map_precipitation,
-    8: map_population,
-    9: slide_cta,
+    4: map_vegetation,
+    5: map_temperature,
+    6: map_precipitation,
+    7: map_population,
 }
 
 
