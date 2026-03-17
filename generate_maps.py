@@ -41,7 +41,7 @@ TEXT_COLOR = "#1A1A1A"
 MUTED_TEXT = "#666666"
 FIG_SIZE = (10.8, 13.5)
 DPI = 100
-TOTAL_SLIDES = 7
+TOTAL_SLIDES = 9
 
 TITLE_FONT = {
     "fontsize": 44,
@@ -697,6 +697,215 @@ def map_precipitation():
     save_map(fig, "06_precipitation.png")
 
 
+# ── Slide 8: Hormuz Overview (coastline + zoom box) ───────
+def map_hormuz_overview():
+    import math
+    print("[08] Hormuz — Iran Overview")
+
+    fig, ax = create_fig()
+    boundary = load_boundary()
+    iran_geom = boundary.union_all()
+
+    # ── Extract southern coastline ──
+    ocean_path = os.path.join(DATA_DIR, "ne_10m_ocean.shp")
+    ocean = gpd.read_file(ocean_path)
+    iran_boundary_line = iran_geom.boundary
+    ocean_buffered = ocean.union_all().buffer(0.02)
+    coastal_line = iran_boundary_line.intersection(ocean_buffered)
+
+    from shapely.geometry import MultiLineString, LineString
+
+    if coastal_line.geom_type == "MultiLineString":
+        southern_parts = [seg for seg in coastal_line.geoms if seg.centroid.y < 34.0]
+    elif coastal_line.geom_type == "GeometryCollection":
+        southern_parts = []
+        for geom in coastal_line.geoms:
+            if isinstance(geom, (LineString, MultiLineString)) and geom.centroid.y < 34.0:
+                southern_parts.append(geom)
+    else:
+        southern_parts = [coastal_line] if coastal_line.centroid.y < 34.0 else []
+
+    southern_coast = MultiLineString(southern_parts) if len(southern_parts) > 1 else southern_parts[0]
+    coast_gdf = gpd.GeoDataFrame(geometry=[southern_coast], crs="EPSG:4326")
+
+    # Measure coastline length
+    coast_utm = coast_gdf.to_crs("EPSG:32639")
+    coast_km = coast_utm.geometry.iloc[0].length / 1000.0
+
+    # ── Draw ──
+    add_water_background(ax)
+    add_land_context(ax)
+
+    # Iran — grey border, coastline is the star
+    boundary.plot(
+        ax=ax, facecolor=LAND_COLOR, edgecolor="#AAAAAA",
+        linewidth=0.8, zorder=5,
+    )
+
+    # Southern coastline — thick black
+    coast_gdf.plot(ax=ax, color="black", linewidth=3.5, zorder=8)
+
+    # Coastline length label — BIG
+    ax.text(
+        46.5, 28.0, f"~{coast_km:,.0f} km\nof coastline",
+        fontsize=28, color="black", fontweight="bold",
+        fontfamily="sans-serif", ha="center", va="center",
+        path_effects=[pe.withStroke(linewidth=4, foreground="#FFFFFF")],
+        zorder=11,
+    )
+
+    # Zoom box around Hormuz
+    from matplotlib.patches import Rectangle
+    zoom_box = (54.5, 57.5, 25.5, 27.5)
+    rect = Rectangle(
+        (zoom_box[0], zoom_box[2]),
+        zoom_box[1] - zoom_box[0],
+        zoom_box[3] - zoom_box[2],
+        linewidth=3, edgecolor=ACCENT_COLOR, facecolor="none",
+        zorder=12,
+    )
+    ax.add_patch(rect)
+
+    # Iran label
+    ax.text(
+        53.0, 34.0, "IRAN", fontsize=22, color="black", fontweight="bold",
+        fontfamily="sans-serif", ha="center", va="center",
+        path_effects=TEXT_OUTLINE, zorder=10,
+    )
+
+    set_map_extent(ax, boundary, pad=0.5)
+    add_title(ax, "Strait of Hormuz")
+    add_source(ax, "GADM v4.1 / Natural Earth")
+
+    save_map(fig, "08_hormuz_overview.png")
+
+
+# ── Slide 9: Hormuz Bathymetry Zoom ──────────────────────
+def map_hormuz_bathymetry():
+    import math
+    print("[09] Hormuz — Bathymetry Zoom")
+
+    fig, ax = create_fig()
+    boundary = load_boundary()
+
+    # ── Extract southern coastline (same logic) ──
+    ocean_path = os.path.join(DATA_DIR, "ne_10m_ocean.shp")
+    ocean = gpd.read_file(ocean_path)
+    iran_geom = boundary.union_all()
+    iran_boundary_line = iran_geom.boundary
+    ocean_buffered = ocean.union_all().buffer(0.02)
+    coastal_line = iran_boundary_line.intersection(ocean_buffered)
+
+    from shapely.geometry import MultiLineString, LineString
+
+    if coastal_line.geom_type == "MultiLineString":
+        southern_parts = [seg for seg in coastal_line.geoms if seg.centroid.y < 34.0]
+    elif coastal_line.geom_type == "GeometryCollection":
+        southern_parts = []
+        for geom in coastal_line.geoms:
+            if isinstance(geom, (LineString, MultiLineString)) and geom.centroid.y < 34.0:
+                southern_parts.append(geom)
+    else:
+        southern_parts = [coastal_line] if coastal_line.centroid.y < 34.0 else []
+
+    southern_coast = MultiLineString(southern_parts) if len(southern_parts) > 1 else southern_parts[0]
+    coast_gdf = gpd.GeoDataFrame(geometry=[southern_coast], crs="EPSG:4326")
+
+    # ── Strait width ──
+    # Points on actual coastlines (Iran shore south of Qeshm → Oman Musandam tip)
+    iran_pt = (56.26, 26.58)
+    oman_pt = (56.26, 26.08)
+
+    def haversine_km(lon1, lat1, lon2, lat2):
+        R = 6371.0
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+        return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    strait_km = haversine_km(*iran_pt, *oman_pt)
+
+    # ── Load hi-res bathymetry ──
+    bathy_path = os.path.join(DATA_DIR, "hormuz_bathymetry_hires.tif")
+    if not os.path.exists(bathy_path):
+        print("    Downloading hi-res bathymetry...")
+        import urllib.request
+        url = (
+            "https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/"
+            "DEM_global_mosaic/ImageServer/exportImage?"
+            "bbox=54,25,58,28&bboxSR=4326&size=2400,1800&format=tiff&f=image"
+        )
+        urllib.request.urlretrieve(url, bathy_path)
+
+    with rasterio.open(bathy_path) as src:
+        bathy_data = src.read(1).astype(float)
+        bathy_extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+
+    # Mask land
+    bathy_water = bathy_data.copy()
+    bathy_water[bathy_water > 0] = np.nan
+
+    # Discrete bathymetry colormap
+    depth_bounds = [0, -10, -25, -50, -75, -100, -150, -200]
+    depth_bounds_sorted = sorted(depth_bounds)  # [-200, -150, -100, -75, -50, -25, -10, 0]
+    depth_colors = ["#0B2545", "#1B4F72", "#21618C", "#2E86C1", "#5DADE2", "#85C1E9", "#AED6F1"]
+    bathy_cmap = mcolors.ListedColormap(depth_colors)
+    bathy_norm = mcolors.BoundaryNorm(depth_bounds_sorted, bathy_cmap.N)
+
+    im = ax.imshow(
+        bathy_water, cmap=bathy_cmap, norm=bathy_norm, extent=bathy_extent,
+        zorder=2, interpolation="nearest",
+    )
+
+    # Navigable channel highlight: depth < -30m gets a semi-transparent overlay
+    # This shows where supertankers can actually sail
+    navigable = np.full_like(bathy_water, np.nan)
+    navigable[(bathy_water < -30) & ~np.isnan(bathy_water)] = 1.0
+    nav_cmap = mcolors.ListedColormap(["#FFFFFF"])
+    ax.imshow(
+        navigable, cmap=nav_cmap, extent=bathy_extent,
+        alpha=0.15, zorder=3, interpolation="nearest",
+    )
+
+    # Land
+    add_land_context(ax)
+    boundary.plot(
+        ax=ax, facecolor=LAND_COLOR, edgecolor="#AAAAAA",
+        linewidth=0.8, zorder=5,
+    )
+    coast_gdf.plot(ax=ax, color="black", linewidth=2.5, zorder=8)
+
+    # Minimal labels — just IRAN on land
+    ax.text(
+        55.3, 26.5, "IRAN", fontsize=18, color="black", fontweight="bold",
+        fontfamily="sans-serif", ha="center",
+        path_effects=TEXT_OUTLINE, zorder=10,
+    )
+
+    # Set extent to zoom area
+    ax.set_xlim(54.5, 57.5)
+    ax.set_ylim(25.2, 27.5)
+
+    # Colorbar — top-left, large bold catchy numbers
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+    cax = inset_axes(ax, width="4%", height="45%", loc="upper left", borderpad=2)
+    cax.set_facecolor("#F5F5F5")
+    cbar = fig.colorbar(im, cax=cax)
+    cbar.set_label("DEPTH (m)", color=TEXT_COLOR, fontsize=20, fontweight="bold")
+    cbar.ax.yaxis.label.set_path_effects(TEXT_OUTLINE)
+    cbar.ax.yaxis.set_tick_params(color=TEXT_COLOR, width=2, length=6)
+    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=TEXT_COLOR, fontsize=18, fontweight="bold")
+    for lbl in cbar.ax.yaxis.get_ticklabels():
+        lbl.set_path_effects(TEXT_OUTLINE)
+    cbar.outline.set_edgecolor("#999999")
+    cbar.outline.set_linewidth(1.5)
+
+    add_title(ax, "Strait of Hormuz — Depth")
+    add_source(ax, "NOAA ETOPO 2022")
+
+    save_map(fig, "09_hormuz_bathymetry.png")
+
+
 # ── Main ──────────────────────────────────────────────────
 MAP_FUNCS = {
     1: slide_hook,
@@ -706,6 +915,8 @@ MAP_FUNCS = {
     5: map_temperature,
     6: map_precipitation,
     7: map_population,
+    8: map_hormuz_overview,
+    9: map_hormuz_bathymetry,
 }
 
 
