@@ -27,6 +27,8 @@ env/
 .DS_Store
 Thumbs.db
 
-# Claude Code
+# Claude Code & instruction markdown files
 CLAUDE.md
 .claude/
+CAROUSEL_INSTRUCTIONS.md
+instructions_*.md
