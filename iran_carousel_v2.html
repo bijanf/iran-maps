@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iran War Carousel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0D0D0B;
+  --bg2:#141412;
+  --gold:#C8923A;
+  --gold-dim:#8A6128;
+  --red:#C84A3A;
+  --teal:#1D9E75;
+  --warm:#F2EDE4;
+  --muted:#9A9488;
+  --border:rgba(200,146,58,0.18);
+  --w:1080px;
+  --scale:0.5;
+}
+body{background:#1a1a18;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--warm);padding:20px;gap:12px}
+.carousel-wrap{position:relative;width:calc(var(--w)*var(--scale));user-select:none}
+.slide-counter{text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.12em}
+.viewport{width:calc(var(--w)*var(--scale));height:calc(var(--w)*var(--scale));overflow:hidden;position:relative}
+.slide{width:var(--w);height:var(--w);position:absolute;top:0;left:0;transform:scale(var(--scale));transform-origin:top left;background:var(--bg);display:none;flex-direction:column;overflow:hidden}
+.slide.active{display:flex}
+.geo{position:absolute;pointer-events:none}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.nav-btn{background:none;border:.5px solid rgba(200,146,58,0.3);color:var(--gold);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nav-btn:hover{background:rgba(200,146,58,0.1)}
+.dots{display:flex;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gold-dim);cursor:pointer;transition:all .2s}
+.dot.active{background:var(--gold);width:18px;border-radius:3px}
+.hint{text-align:center;font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.08em}
+.s-inner{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;padding:64px 72px}
+.tag{font-family:'DM Mono',monospace;font-size:24px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-bottom:20px}
+.slide-num{font-family:'DM Mono',monospace;font-size:24px;color:var(--muted)}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.divider{height:1px;background:var(--border);margin-bottom:32px}
+.body-area{flex:1;display:flex;flex-direction:column;justify-content:center}
+.footer{padding-top:24px;display:flex;align-items:flex-end;justify-content:space-between}
+.ft-note{font-size:28px;color:var(--muted);font-style:italic;max-width:800px;line-height:1.4}
+.ft-brand{font-family:'DM Mono',monospace;font-size:28px;color:var(--gold-dim);letter-spacing:.1em}
+.sentence{font-size:38px;color:var(--muted);line-height:1.45;max-width:940px;margin-top:24px}
+.sentence em{color:var(--warm);font-style:normal;font-weight:500}
+
+/* S1 */
+.s1-title{font-family:'Playfair Display',serif;font-size:116px;line-height:1.05;color:var(--warm)}
+.s1-title em{color:var(--gold);font-style:italic}
+.s1-icri-wrap{display:flex;align-items:baseline;gap:20px;margin-top:48px}
+.s1-icri{font-family:'DM Mono',monospace;font-size:120px;color:var(--red);line-height:1}
+.s1-icri-sub{font-size:32px;color:var(--muted);line-height:1.5}
+
+/* S2 */
+.actor-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px}
+.actor{border:.5px solid var(--border);padding:30px 32px}
+.actor-name{font-family:'Playfair Display',serif;font-size:44px;margin-bottom:10px}
+.actor-strat{font-family:'DM Mono',monospace;font-size:28px;margin-bottom:10px}
+.actor-strat.esc{color:var(--red)}
+.actor-strat.lock{color:var(--gold)}
+.actor-strat.band{color:var(--muted)}
+.actor-note{font-size:28px;color:var(--muted);line-height:1.4}
+
+/* S3 */
+.big-num{font-family:'Playfair Display',serif;font-size:220px;color:var(--red);line-height:1;letter-spacing:-4px}
+.big-label{font-size:40px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px}
+.col-box{border-left:4px solid var(--gold);padding:18px 24px}
+.col-title{font-family:'Playfair Display',serif;font-size:36px;color:var(--warm);margin-bottom:8px}
+.col-body{font-size:30px;color:var(--muted);line-height:1.45}
+
+/* S4 */
+.ne-huge{font-family:'DM Mono',monospace;font-size:200px;color:var(--red);line-height:1;letter-spacing:-4px}
+.ne-label{font-size:34px;color:var(--muted);margin-top:8px}
+.dyad-row{display:flex;align-items:center;gap:20px;padding:24px 0;border-bottom:.5px solid var(--border)}
+.dyad-actors{font-family:'Playfair Display',serif;font-size:38px;min-width:280px;color:var(--warm)}
+.dyad-type{font-family:'DM Mono',monospace;font-size:28px;color:var(--muted);flex:1}
+.dyad-lock{font-family:'DM Mono',monospace;font-size:30px;color:var(--red)}
+
+/* S5 */
+.tl-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:16px}
+.tl-item{border-top:4px solid var(--red);padding-top:24px}
+.tl-year{font-family:'DM Mono',monospace;font-size:48px;color:var(--gold);margin-bottom:14px}
+.tl-event{font-size:32px;color:var(--warm);font-weight:500;line-height:1.3;margin-bottom:12px}
+.tl-outcome{font-size:28px;color:var(--muted);line-height:1.5}
+.tl-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:24px;padding:4px 12px;background:rgba(200,74,58,0.15);color:var(--red);margin-top:10px}
+
+/* S6 */
+.stat-pair{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:36px}
+.stat-box{border-top:4px solid var(--gold);padding-top:24px}
+.stat-n{font-family:'Playfair Display',serif;font-size:130px;color:var(--warm);line-height:1}
+.stat-n.red{color:var(--red)}
+.stat-desc{font-size:30px;color:var(--muted);line-height:1.45;margin-top:10px}
+.stat-src{font-family:'DM Mono',monospace;font-size:28px;color:var(--gold-dim);margin-top:12px}
+.finding{border-left:4px solid var(--teal);padding:20px 24px;background:rgba(29,158,117,0.05);margin-top:12px}
+.finding-body{font-size:30px;color:var(--muted);line-height:1.5}
+
+/* S7 */
+.concl-q{font-family:'Playfair Display',serif;font-size:56px;line-height:1.2;color:var(--muted);margin-bottom:14px}
+.concl-ans{font-family:'Playfair Display',serif;font-size:104px;color:var(--teal);font-style:italic;line-height:1;margin-bottom:32px}
+.concl-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.concl-box{padding:28px 30px;border:.5px solid var(--border)}
+.concl-box.red{border-color:rgba(200,74,58,0.3)}
+.cond-head{font-family:'DM Mono',monospace;font-size:26px;color:var(--gold);margin-bottom:12px;letter-spacing:.1em;text-transform:uppercase}
+.cond-head.red{color:var(--red)}
+.cond-text{font-size:30px;color:var(--muted);line-height:1.45}
+</style>
+</head>
+<body>
+<div class="carousel-wrap">
+  <div class="slide-counter"><span id="sc">01</span> / 05</div>
+  <div class="viewport">
+
+  <!-- S1: Cover -->
+  <div class="slide active" id="s1">
+    <div class="s-inner">
+      <div class="top-bar">
+        <div class="tag">a personal perspective · Iran 2026</div>
+        <div class="slide-num">01 / 05</div>
+      </div>
+      <div class="divider"></div>
+      <div class="body-area">
+        <div class="s1-title">Who controls<br>the <em>outcome</em><br>of the Iran war?</div>
+        <div class="sentence" style="margin-top:48px">The people who pay the price have <em>no say in how it ends.</em></div>
+      </div>
+      <div class="footer">
+        <div class="ft-note">A personal perspective on who holds the power — and who doesn't.</div>
+        <div class="ft-brand">swipe →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2: Players -->
+  <div class="slide" id="s2">
+    <div class="s-inner">
+      <div class="top-bar">
+        <div class="tag">the players</div>
+        <div class="slide-num">02 / 05</div>
+      </div>
+      <div class="divider"></div>
+      <div class="body-area">
+        <div class="actor-grid">
+          <div class="actor" style="border-color:rgba(200,74,58,0.4)">
+            <div class="actor-name" style="color:#E8856A">United States</div>
+            <div class="actor-strat esc">● Trapped</div>
+            <div class="actor-note">Drawn in by miscalculation — now stuck between domestic pressure and alliance commitments</div>
+          </div>
+          <div class="actor" style="border-color:rgba(200,74,58,0.4)">
+            <div class="actor-name" style="color:#E8856A">Israel</div>
+            <div class="actor-strat esc">● Pushing for war</div>
+            <div class="actor-note">Sees Iran as an existential threat, won't back down</div>
+          </div>
+          <div class="actor" style="border-color:rgba(200,146,58,0.35)">
+            <div class="actor-name" style="color:#D4A855">IRGC</div>
+            <div class="actor-strat lock">● Trapped</div>
+            <div class="actor-note">Backing down would make the regime look weak</div>
+          </div>
+          <div class="actor" style="border-color:rgba(154,148,136,0.2)">
+            <div class="actor-name" style="color:var(--muted)">Gulf states</div>
+            <div class="actor-strat band">○ Hedging their bets</div>
+            <div class="actor-note">Letting rivals weaken each other while protecting themselves</div>
+          </div>
+        </div>
+        <div class="sentence">Four players decide what happens. <em>None of them is the Iranian people.</em></div>
+      </div>
+      <div class="footer">
+        <div class="ft-note">Every side has a reason to keep fighting. No side has a reason to stop.</div>
+        <div class="ft-brand">swipe →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: Non-players -->
+  <div class="slide" id="s3">
+    <svg class="geo" style="bottom:0;right:0;opacity:.04" width="600" height="600" viewBox="0 0 600 600">
+      <g transform="translate(500,500)">
+        <polygon points="0,-250 27,-86 144,-144 56,-27 250,0 86,27 144,144 27,56 0,250 -27,86 -144,144 -56,27 -250,0 -86,-27 -144,-144 -27,-56" fill="none" stroke="#C8923A" stroke-width="1"/>
+        <circle cx="0" cy="0" r="150" fill="none" stroke="#C8923A" stroke-width="0.6"/>
+      </g>
+    </svg>
+    <div class="s-inner">
+      <div class="top-bar">
+        <div class="tag">the non-players</div>
+        <div class="slide-num">03 / 05</div>
+      </div>
+      <div class="divider"></div>
+      <div class="body-area">
+        <div class="big-num">90M+</div>
+        <div class="big-label">Iranians — inside & diaspora</div>
+        <div class="two-col" style="margin-top:40px">
+          <div class="col-box">
+            <div class="col-title">Pay everything</div>
+            <div class="col-body">The vast majority bear all the costs of war — while a small entrenched minority props up the regime.</div>
+          </div>
+          <div class="col-box" style="border-color:var(--teal)">
+            <div class="col-title">Shut out</div>
+            <div class="col-body">Millions of Iranians abroad have money, expertise, and connections — but no seat at any table.</div>
+          </div>
+        </div>
+        <div class="sentence" style="margin-top:32px">Over a thousand civilians killed, historic sites destroyed — <em>and none of the decision-makers are losing sleep over it.</em></div>
+      </div>
+      <div class="footer">
+        <div class="ft-note">Source: HRANA human rights reports, March 2026</div>
+        <div class="ft-brand">swipe →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: Ceasefire -->
+  <div class="slide" id="s4">
+    <div class="s-inner">
+      <div class="top-bar">
+        <div class="tag">why ceasefire fails</div>
+        <div class="slide-num">04 / 05</div>
+      </div>
+      <div class="divider"></div>
+      <div class="body-area">
+        <div class="dyad-row" style="border-top:.5px solid var(--border)">
+          <div class="dyad-actors">US ↔ Iran</div>
+          <div class="dyad-type">Iran should back down — but can't without collapsing</div>
+          <div class="dyad-lock">stuck</div>
+        </div>
+        <div class="dyad-row">
+          <div class="dyad-actors">Israel ↔ Iran</div>
+          <div class="dyad-type">Both sides gain more from fighting than stopping</div>
+          <div class="dyad-lock">stuck</div>
+        </div>
+        <div class="dyad-row">
+          <div class="dyad-actors">US ↔ Israel</div>
+          <div class="dyad-type">Codependent but fractured — forced together even when their goals clash</div>
+          <div class="dyad-lock" style="color:var(--gold)">most stuck</div>
+        </div>
+        <div class="sentence" style="margin-top:36px">Even when one side wants to stop, the others won't let them. <em>The machine keeps going — civilians keep dying.</em></div>
+      </div>
+      <div class="footer">
+        <div class="ft-note">The structure is the problem, not any single player.</div>
+        <div class="ft-brand">swipe →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: Conclusion -->
+  <div class="slide" id="s5">
+    <svg class="geo" style="bottom:-80px;right:-80px;opacity:.06" width="500" height="500" viewBox="0 0 500 500">
+      <g transform="translate(400,400)">
+        <polygon points="0,-240 26,-83 139,-139 54,-26 240,0 83,26 139,139 26,54 0,240 -26,83 -139,139 -54,26 -240,0 -83,-26 -139,-139 -26,-54" fill="none" stroke="#1D9E75" stroke-width="1.2"/>
+        <circle cx="0" cy="0" r="140" fill="none" stroke="#1D9E75" stroke-width="0.7"/>
+      </g>
+    </svg>
+    <div class="s-inner">
+      <div class="top-bar">
+        <div class="tag">conclusion</div>
+        <div class="slide-num">05 / 05</div>
+      </div>
+      <div class="divider"></div>
+      <div class="body-area">
+        <div class="concl-q">Could it have been stopped?</div>
+        <div class="concl-ans">Yes — but not like this.</div>
+        <div class="concl-grid">
+          <div class="concl-box">
+            <div class="cond-head">what the west did</div>
+            <div class="cond-text">For years they chose short-term deals over long-term solutions — legitimizing the IRGC while ignoring the people.</div>
+          </div>
+          <div class="concl-box red">
+            <div class="cond-head red">what they do now</div>
+            <div class="cond-text">Now the IRGC is on the terror list. Now they bomb. The Iranian people pay for both decisions.</div>
+          </div>
+        </div>
+        <div class="sentence" style="margin-top:28px">Partners yesterday, terrorists today. <em>Iranians paid the price both times.</em></div>
+      </div>
+      <div class="footer">
+        <div class="ft-note">The West legitimized the regime, then went to war with it. The people suffer either way.</div>
+        <div class="ft-brand">@bijanfallah_</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /viewport -->
+
+  <div class="nav">
+    <button class="nav-btn" id="prev">←</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="next">→</button>
+  </div>
+  <div class="hint">arrows · dots · keyboard ← → · swipe · screenshot each slide for instagram</div>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const dotsC=document.getElementById('dots');
+const sc=document.getElementById('sc');
+let cur=0;
+slides.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>go(i);
+  dotsC.appendChild(d);
+});
+function go(n){
+  slides[cur].classList.remove('active');
+  dotsC.children[cur].classList.remove('active');
+  cur=(n+slides.length)%slides.length;
+  slides[cur].classList.add('active');
+  dotsC.children[cur].classList.add('active');
+  sc.textContent=String(cur+1).padStart(2,'0');
+}
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(cur+1);if(e.key==='ArrowLeft')go(cur-1)});
+let tx=0;
+const wrap=document.querySelector('.carousel-wrap');
+wrap.addEventListener('touchstart',e=>tx=e.touches[0].clientX);
+wrap.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>40)go(dx<0?cur+1:cur-1)});
+</script>
+</body>
+</html>
