@@ -1,11 +1,18 @@
-# Iran in 8 Maps
+# Iran Maps & Visualizations
 
-An Instagram carousel (1080 x 1350 px, 4:5 ratio) introducing Iran through geography, nature, and climate — 10 slides total.
+A collection of Instagram-ready map visualizations and carousel posts about Iran — geography, climate, geopolitics.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## Slides
+## Projects
+
+### 1. Iran in 8 Maps — Instagram Carousel
+10-slide carousel (1080x1350px, 4:5 ratio) introducing Iran through geography, nature, and climate.
+
+```bash
+python generate_maps.py
+```
 
 | # | Slide | Description |
 |---|-------|-------------|
@@ -13,27 +20,45 @@ An Instagram carousel (1080 x 1350 px, 4:5 ratio) introducing Iran through geogr
 | 2 | Political Boundary | GADM national border |
 | 3 | Size Comparison | Iran vs Germany overlay |
 | 4 | Topography | SRTM elevation terrain |
-| 5 | Elevation Comparison | Bar-chart infographic (Iran vs Germany) |
-| 6 | Land Cover | Copernicus CGLS-LC100 classification |
-| 7 | Temperature | W5E5 annual mean (ERA5 adjusted) |
-| 8 | Precipitation | W5E5 annual total (ERA5 adjusted) |
-| 9 | Population Density | WorldPop 2020 log-scale heatmap |
-| 10 | CTA | Save & share call-to-action |
+| 5 | Elevation Comparison | Bar-chart infographic |
+| 6 | Land Cover | Copernicus CGLS-LC100 |
+| 7 | Temperature | W5E5 annual mean |
+| 8 | Precipitation | W5E5 annual total |
+| 9 | Population Density | WorldPop 2020 heatmap |
+| 10 | CTA | Save & share |
+
+### 2. Iran War Analysis — Instagram Carousel
+5-slide HTML carousel (1080x1080px) analyzing the Iran 2026 conflict — who the players are, why ceasefire fails, and Western responsibility.
+
+```bash
+python export_carousel.py
+```
+
+Requires Playwright (`pip install playwright && playwright install chromium`).
+
+### 3. Strait of Hormuz
+Two-slide carousel: overview map with coastline highlight + bathymetry zoom with NOAA ETOPO depth bands.
+
+### 4. Iran 4,000km Strike Radius
+Two-slide carousel: geodesic range circle from Tehran reaching European capitals + bilingual text card.
+
+```bash
+python generate_slides.py
+```
+
+### 5. Tehran–Berlin Climate Comparison
+Story-format plots comparing temperature and precipitation between Tehran and Berlin.
+
+```bash
+python generate_story_plots.py
+```
 
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
-
-# 2. Download / prepare data
 python download_data.py
-
-# 3. Generate all 10 slides
 python generate_maps.py
-
-# Generate a single slide
-python generate_maps.py --map 4
 ```
 
 Output PNGs land in `output/`.
@@ -43,32 +68,26 @@ Output PNGs land in `output/`.
 | Dataset | Source | License |
 |---------|--------|---------|
 | Boundaries | [GADM v4.1](https://gadm.org/) | Academic / non-commercial |
-| Elevation | [SRTM 90 m](https://srtm.csi.cgiar.org/) (CGIAR-CSI) | Public domain |
+| Elevation | [SRTM 90 m](https://srtm.csi.cgiar.org/) | Public domain |
 | Land Cover | [Copernicus CGLS-LC100 v3](https://zenodo.org/records/3939038) | CC-BY 4.0 |
 | Population | [WorldPop 2020 1 km](https://www.worldpop.org/) | CC-BY 4.0 |
-| Climate | [W5E5 v2.0 / ISIMIP](https://interactive-atlas.ipcc.ch/) (ERA5 adjusted, 1980–2015) | See ISIMIP terms |
+| Climate | [W5E5 v2.0 / ISIMIP](https://interactive-atlas.ipcc.ch/) | See ISIMIP terms |
+| Bathymetry | [NOAA ETOPO](https://www.ncei.noaa.gov/products/etopo-global-relief-model) | Public domain |
 | Context layers | [Natural Earth 10 m](https://www.naturalearthdata.com/) | Public domain |
-
-> **Note:** Climate data (temperature & precipitation) must be downloaded manually from the
-> [IPCC WGI Interactive Atlas](https://interactive-atlas.ipcc.ch/) — select W5E5 observations,
-> annual mean temperature (tas) and total precipitation (pr), then place the zip files in `data/`.
-
-## Requirements
-
-- Python 3.10+
-- geopandas, rasterio, matplotlib, numpy, xarray
-
-See `requirements.txt` for exact packages.
 
 ## Project Structure
 
 ```
 iran_maps/
-├── generate_maps.py     # Main map generator (10 slides)
-├── download_data.py     # Data download & preprocessing
-├── requirements.txt     # Python dependencies
-├── data/                # Input data (gitignored)
-└── output/              # Generated PNGs (gitignored)
+├── generate_maps.py        # Main 10-slide map generator
+├── generate_slides.py      # Strike radius carousel
+├── generate_story_plots.py # Tehran–Berlin climate stories
+├── iran_carousel_v2.html   # War analysis carousel (HTML)
+├── export_carousel.py      # Playwright PNG exporter
+├── download_data.py        # Data download & preprocessing
+├── requirements.txt        # Python dependencies
+├── data/                   # Input data (gitignored)
+└── output/                 # Generated PNGs (gitignored)
 ```
 
 ## License
